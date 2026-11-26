@@ -1,0 +1,11 @@
+<Project Sdk="Dalamud.NET.Sdk/15.0.0">
+  <PropertyGroup>
+    <Version>0.1.0</Version>
+    <Author>CCRankViewer contributors</Author>
+    <Name>Crystalline Conflict Rank Viewer</Name>
+    <Punchline>View achievement-confirmed CC season finishes.</Punchline>
+    <Description>A starter plugin for displaying the highest Crystalline Conflict season-finish tier confirmed by public achievements. Rank lookups are not implemented yet.</Description>
+    <RepoUrl>https://github.com/AdalithCode/CCRankViewer</RepoUrl>
+    <Tags>pvp;crystalline conflict;rank</Tags>
+  </PropertyGroup>
+</Project>

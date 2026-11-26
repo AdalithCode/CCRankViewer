@@ -1,6 +1,7 @@
 using System.Numerics;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Windowing;
+using CCRankViewer.Roster;
 
 namespace CCRankViewer.Windows;
 
@@ -11,7 +12,7 @@ internal sealed class MainWindow : Window
     internal MainWindow(Plugin plugin) : base("Crystalline Conflict Rank Viewer###CCRankViewerMain")
     {
         this.plugin = plugin;
-        Size = new Vector2(620, 320);
+        Size = new Vector2(720, 420);
         SizeCondition = ImGuiCond.FirstUseEver;
         SizeConstraints = new WindowSizeConstraints
         {
@@ -32,10 +33,30 @@ internal sealed class MainWindow : Window
         }
 
         ImGui.Separator();
-        ImGui.TextWrapped("Template ready. Match roster detection and Lodestone achievement lookups are not connected yet.");
+        ImGui.TextWrapped(plugin.Roster.Status);
         ImGui.Spacing();
 
-        if (ImGui.BeginTable("RankResults", 4, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg))
+        if (!plugin.Roster.IsCasualMatch)
+            return;
+
+        DrawTeam(MatchTeam.Yours, "Your team (excluding you)");
+        DrawTeam(MatchTeam.Opposing, "Opposing team");
+        DrawTeam(MatchTeam.Unknown, "Players awaiting team assignment");
+    }
+
+    private void DrawTeam(MatchTeam team, string title)
+    {
+        var count = 0;
+        foreach (var player in plugin.Roster.Players)
+            if (player.Team == team)
+                count++;
+
+        if (team == MatchTeam.Unknown && count == 0)
+            return;
+
+        ImGui.TextUnformatted($"{title} ({count})");
+
+        if (ImGui.BeginTable($"RankResults{team}", 4, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg))
         {
             try
             {
@@ -44,11 +65,26 @@ internal sealed class MainWindow : Window
                 ImGui.TableSetupColumn("Best season finish");
                 ImGui.TableSetupColumn("Status");
                 ImGui.TableHeadersRow();
+                foreach (var player in plugin.Roster.Players)
+                {
+                    if (player.Team != team)
+                        continue;
+                    ImGui.TableNextRow();
+                    ImGui.TableNextColumn();
+                    ImGui.TextUnformatted(player.Name);
+                    ImGui.TableNextColumn();
+                    ImGui.TextUnformatted(player.HomeWorld);
+                    ImGui.TableNextColumn();
+                    ImGui.TextUnformatted("Not loaded");
+                    ImGui.TableNextColumn();
+                    ImGui.TextUnformatted("Rank lookup not connected");
+                }
             }
             finally
             {
                 ImGui.EndTable();
             }
         }
+        ImGui.Spacing();
     }
 }

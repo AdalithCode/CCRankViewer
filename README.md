@@ -8,10 +8,14 @@ Minimal Dalamud plugin foundation for a viewer of achievement-confirmed CC seaso
 - `/ccrank config` toggles settings.
 - Dalamud's plugin installer can open either window.
 - A saved setting controls the rank explanation.
-- An empty results table is ready for player, world, best season finish, and lookup status.
+- Casual CC detection polls the current duty and loaded player objects every half second.
+- The roster excludes you and shows the other nine players' names and home worlds.
+- Players are grouped into four teammates and five opponents once team assignments are validated.
+- Partial loading shows a detected-player count and an awaiting-assignment section.
+- Players temporarily outside object range remain listed until you leave the match.
 - Command handlers and UI subscriptions are removed when the plugin unloads.
 
-Match detection, achievement lookups, rank badges, and caching are future work. No player data is collected and no network requests are made by this starter.
+Achievement lookups, rank badges, and persistent caching are future work. Ranks show "Not loaded". The roster exists only in memory for the current match; no network requests are made.
 
 ## Build
 
@@ -35,10 +39,28 @@ Unload the development plugin before rebuilding if files are locked; reload it a
 
 ## Next implementation steps
 
-1. Identify match participants and their home worlds.
-2. Resolve Lodestone character IDs and inspect achievement visibility.
-3. Map the Solid Bronze through Solid Crystal achievements to confirmed tiers.
-4. Add asynchronous lookups, request limits, caching, and clear unavailable/error states.
+1. Resolve Lodestone character IDs and inspect achievement visibility.
+2. Map the Solid Bronze through Solid Crystal achievements to confirmed tiers.
+3. Add asynchronous lookups, request limits, caching, and clear unavailable/error states.
+
+## Verify roster detection
+
+Reload the plugin after building and open `/ccrank` manually (automatic opening is future work).
+
+1. Outside a match, the window should ask you to enter casual CC and show no players.
+2. Enter casual CC. As characters load, the count should reach 9/9. Confirm four teammates and five opponents, excluding you, against the game's teams.
+3. Confirm home worlds are correct, including visiting players. Temporarily distant or dead players should remain listed.
+4. Leave the duty. The roster should clear. Enter another match and check that no previous players remain.
+5. Ranked CC, custom CC, Frontline, Rival Wings, and the Wolves' Den should not populate this roster.
+6. Reload the plugin midmatch and confirm it rebuilds the roster as player objects become available.
+
+The implementation reads the installed client structures' battalion field for team membership and the duty sheet's casual CC flag. Live duty identification, team assignments, and player visibility need validation in game; a successful build cannot verify those behaviors.
+
+Run the dependency-free roster checks with:
+
+```powershell
+dotnet run --project Tests/CCRankViewer.RosterChecks.csproj
+```
 
 These achievements establish a season-finish milestone, rather than current rank or the highest tier reached during an unfinished season. Missing or private data must not be presented as Unranked. Coverage of any newer tiers needs verification before expanding the mapping.
 

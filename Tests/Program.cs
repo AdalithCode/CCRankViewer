@@ -38,8 +38,18 @@ roster.Observe(1, 1, ten);
 Check(roster.Players.All(p => p.Team == MatchTeam.Unknown), "Invalid team sizes remain unassigned");
 
 await CharacterSearchChecks.RunAsync();
+await RankingAchievementChecks.RunAsync();
 if (args.Length == 1)
 {
     var result = CCRankViewer.Lodestone.CharacterSearch.Parse(System.IO.File.ReadAllText(args[0]), "Freya Highwind", "Spriggan");
     Check(result.CharacterId == 37533969, "Downloaded public Lodestone search HTML resolves the expected character");
+}
+if (args.Length == 2)
+{
+    var rank = CCRankViewer.Lodestone.RankingAchievements.Parse(System.IO.File.ReadAllText(args[0]), 37533969);
+    Check(rank.Status == CCRankViewer.Lodestone.RankStatus.Confirmed && rank.Tier == "Crystal",
+        "Downloaded public ranking page confirms Crystal");
+    var restricted = CCRankViewer.Lodestone.RankingAchievements.Parse(System.IO.File.ReadAllText(args[1]), 62713057, 403);
+    Check(restricted.Status == CCRankViewer.Lodestone.RankStatus.Restricted,
+        "Downloaded Lodestone restriction page recognized");
 }

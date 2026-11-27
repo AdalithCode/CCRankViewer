@@ -6,19 +6,20 @@ using System.Text.RegularExpressions;
 
 namespace CCRankViewer.Lodestone;
 
-internal enum SearchStatus { Queued, Searching, Found, NotFound, NeedsReview, Unavailable }
+internal enum SearchStatus { Queued, Searching, CheckingAchievements, Found, NotFound, NeedsReview, Unavailable }
 
-internal sealed record CharacterSearchResult(SearchStatus Status, ulong? CharacterId = null, string? Detail = null)
+internal sealed record CharacterSearchResult(SearchStatus Status, ulong? CharacterId = null, string? Detail = null, RankResult? Rank = null)
 {
-    internal string Label => Status switch
+    internal string Label => Rank?.StatusLabel ?? (Status switch
     {
         SearchStatus.Queued => "Queued",
         SearchStatus.Searching => "Finding character...",
+        SearchStatus.CheckingAchievements => "Checking achievements...",
         SearchStatus.Found => "Character found",
         SearchStatus.NotFound => "Not found",
         SearchStatus.NeedsReview => "Match needs review",
         _ => "Lookup unavailable",
-    };
+    });
 }
 
 internal static class CharacterSearch

@@ -29,7 +29,7 @@ internal sealed class MainWindow : Window
         if (plugin.Configuration.ShowExplanatoryText)
         {
             ImGui.Spacing();
-            ImGui.TextWrapped("Best season finish is based on earned CC ranking achievements. It does not represent current rank.");
+            ImGui.TextWrapped("Best confirmed finish is based on earned CC achievements from Bronze through Ultima. It does not represent current rank.");
         }
 
         ImGui.Separator();
@@ -62,7 +62,7 @@ internal sealed class MainWindow : Window
             {
                 ImGui.TableSetupColumn("Player");
                 ImGui.TableSetupColumn("Home world");
-                ImGui.TableSetupColumn("Best season finish");
+                ImGui.TableSetupColumn("Best confirmed finish");
                 ImGui.TableSetupColumn("Status");
                 ImGui.TableHeadersRow();
                 foreach (var player in plugin.Roster.Players)
@@ -75,16 +75,19 @@ internal sealed class MainWindow : Window
                     ImGui.TableNextColumn();
                     ImGui.TextUnformatted(player.HomeWorld);
                     ImGui.TableNextColumn();
-                    ImGui.TextUnformatted("Not loaded");
-                    ImGui.TableNextColumn();
                     var character = plugin.Characters.Get(player);
+                    ImGui.TextUnformatted(character.Rank?.RankLabel ?? (character.Status is Lodestone.SearchStatus.Queued
+                        or Lodestone.SearchStatus.Searching or Lodestone.SearchStatus.CheckingAchievements ? "Not loaded" : "Unknown"));
+                    ImGui.TableNextColumn();
                     ImGui.TextUnformatted(character.Label);
                     if (ImGui.IsItemHovered())
                     {
                         ImGui.BeginTooltip();
-                        ImGui.TextUnformatted(character.Detail ?? character.Label);
+                        ImGui.PushTextWrapPos(ImGui.GetFontSize() * 30);
+                        ImGui.TextUnformatted(character.Rank?.Detail ?? character.Detail ?? character.Label);
                         if (character.CharacterId is { } id)
                             ImGui.TextUnformatted($"Lodestone ID: {id}");
+                        ImGui.PopTextWrapPos();
                         ImGui.EndTooltip();
                     }
                 }

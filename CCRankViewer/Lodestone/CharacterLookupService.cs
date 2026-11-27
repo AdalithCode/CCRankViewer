@@ -69,16 +69,28 @@ internal sealed class CharacterLookupService : IDisposable
                 if (work.Token.IsCancellationRequested)
                     continue;
                 var key = (work.Player.Name, work.Player.HomeWorldId);
+                CharacterSearchResult? character = null;
                 try
                 {
                     work.Results[key] = new(SearchStatus.Searching);
-                    work.Results[key] = await search.FindAsync(work.Player.Name, work.Player.HomeWorld, work.Token).ConfigureAwait(false);
+                    character = await search.FindAsync(work.Player.Name, work.Player.HomeWorld, work.Token).ConfigureAwait(false);
+                    work.Results[key] = character;
+                    if (character.Status == SearchStatus.Found && character.CharacterId is { } id)
+                    {
+                        work.Results[key] = character with { Status = SearchStatus.CheckingAchievements };
+                        await Task.Delay(1000, work.Token).ConfigureAwait(false);
+                        var rank = await search.ReadRankAsync(id, work.Token).ConfigureAwait(false);
+                        work.Results[key] = character with { Rank = rank };
+                    }
                 }
                 catch (OperationCanceledException) when (work.Token.IsCancellationRequested) { }
                 catch (Exception exception)
                 {
-                    work.Results[key] = new(SearchStatus.Unavailable, Detail: "Search failed or timed out. See /xllog; reload the plugin later to retry.");
-                    log.Warning(exception, "Lodestone character search failed.");
+                    const string detail = "Lookup failed or timed out. See /xllog; reload the plugin later to retry.";
+                    work.Results[key] = character?.CharacterId != null
+                        ? character with { Rank = new(RankStatus.Unavailable, Detail: detail) }
+                        : new(SearchStatus.Unavailable, Detail: detail);
+                    log.Warning(exception, "Lodestone character or achievement lookup failed.");
                 }
                 // One request at a time, at least a second apart, independent of frame rate.
                 await Task.Delay(1000, token).ConfigureAwait(false);

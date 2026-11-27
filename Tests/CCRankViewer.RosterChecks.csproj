@@ -8,5 +8,6 @@
     <Compile Include="../CCRankViewer/Roster/MatchRoster.cs" Link="MatchRoster.cs" />
     <Compile Include="../CCRankViewer/Lodestone/CharacterSearch.cs" Link="CharacterSearch.cs" />
     <Compile Include="../CCRankViewer/Lodestone/CharacterSearchClient.cs" Link="CharacterSearchClient.cs" />
+    <Compile Include="../CCRankViewer/Lodestone/RankingAchievements.cs" Link="RankingAchievements.cs" />
   </ItemGroup>
 </Project>

@@ -6,6 +6,7 @@ using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using CCRankViewer.Windows;
 using CCRankViewer.Roster;
+using CCRankViewer.Lodestone;
 
 namespace CCRankViewer;
 
@@ -27,11 +28,13 @@ public sealed class Plugin : IDalamudPlugin
 
     internal Configuration Configuration { get; }
     internal MatchRosterService Roster { get; }
+    internal CharacterLookupService Characters { get; }
 
     public Plugin()
     {
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
         Roster = new MatchRosterService(Framework, ClientState, ObjectTable, DataManager, Log);
+        Characters = new CharacterLookupService(Framework, Roster, Log);
         mainWindow = new MainWindow(this);
         configWindow = new ConfigWindow(this);
         windowSystem.AddWindow(mainWindow);
@@ -48,6 +51,7 @@ public sealed class Plugin : IDalamudPlugin
 
     public void Dispose()
     {
+        Characters.Dispose();
         Roster.Dispose();
         PluginInterface.UiBuilder.Draw -= windowSystem.Draw;
         PluginInterface.UiBuilder.OpenMainUi -= ToggleMainUi;

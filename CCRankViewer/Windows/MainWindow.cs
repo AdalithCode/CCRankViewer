@@ -77,7 +77,16 @@ internal sealed class MainWindow : Window
                     ImGui.TableNextColumn();
                     ImGui.TextUnformatted("Not loaded");
                     ImGui.TableNextColumn();
-                    ImGui.TextUnformatted("Rank lookup not connected");
+                    var character = plugin.Characters.Get(player);
+                    ImGui.TextUnformatted(character.Label);
+                    if (ImGui.IsItemHovered())
+                    {
+                        ImGui.BeginTooltip();
+                        ImGui.TextUnformatted(character.Detail ?? character.Label);
+                        if (character.CharacterId is { } id)
+                            ImGui.TextUnformatted($"Lodestone ID: {id}");
+                        ImGui.EndTooltip();
+                    }
                 }
             }
             finally

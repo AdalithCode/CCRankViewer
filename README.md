@@ -13,9 +13,15 @@ Minimal Dalamud plugin foundation for a viewer of achievement-confirmed CC seaso
 - Players are grouped into four teammates and five opponents once team assignments are validated.
 - Partial loading shows a detected-player count and an awaiting-assignment section.
 - Players temporarily outside object range remain listed until you leave the match.
+- Automatically searches Lodestone for each player's exact character name and home world, once per match.
+- The Status column shows queued, searching, found, missing, ambiguous, or unavailable results. Hover it for details and the matched Lodestone ID.
 - Command handlers and UI subscriptions are removed when the plugin unloads.
 
-Achievement lookups, rank badges, and persistent caching are future work. Ranks show "Not loaded". The roster exists only in memory for the current match; no network requests are made.
+Achievement lookups, rank badges, and persistent caching are future work. Ranks still show "Not loaded" even after a character is found.
+
+Character searches send the detected names and home worlds to the public North American Lodestone website over HTTPS. One background worker makes requests sequentially with a one-second gap; rate-limit responses pause further requests. No login, shared database, or third-party lookup service is used. Results exist only in memory for the current match. Leaving cancels pending work; old responses cannot fill a new match's rows.
+
+Searches require an exact name and home-world match. Ambiguous or multi-page results are left for review. A blocked, failed, or unexpected response is "Lookup unavailable", never Unranked. Searches are attempted once per character per match; reload the plugin later to retry an error. Persistent caching and a refresh control are future work.
 
 ## Build
 
@@ -53,10 +59,12 @@ Reload the plugin after building and open `/ccrank` manually (automatic opening 
 4. Leave the duty. The roster should clear. Enter another match and check that no previous players remain.
 5. Ranked CC, custom CC, Frontline, Rival Wings, and the Wolves' Den should not populate this roster.
 6. Reload the plugin midmatch and confirm it rebuilds the roster as player objects become available.
+7. Watch Status progress from Queued to Character found. Hover it and compare the Lodestone ID with that player's profile. Rank should still say Not loaded.
+8. Leave while searches are pending, then enter another match. Previous results must not appear beside different players.
 
 The implementation reads the installed client structures' battalion field for team membership and the duty sheet's casual CC flag. Live duty identification, team assignments, and player visibility need validation in game; a successful build cannot verify those behaviors.
 
-Run the dependency-free roster checks with:
+Run the dependency-free roster and character-search checks (including simulated HTTP responses) with:
 
 ```powershell
 dotnet run --project Tests/CCRankViewer.RosterChecks.csproj

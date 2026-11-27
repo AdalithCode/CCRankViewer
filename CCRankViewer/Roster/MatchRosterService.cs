@@ -22,6 +22,7 @@ internal sealed class MatchRosterService : IDisposable
 
     internal IReadOnlyList<RosterPlayer> Players => roster.Players;
     internal bool IsCasualMatch { get; private set; }
+    internal int Generation { get; private set; }
     internal string Status { get; private set; } = "Enter a casual Crystalline Conflict match to detect players.";
 
     internal MatchRosterService(IFramework framework, IClientState clientState, IObjectTable objectTable,
@@ -47,6 +48,7 @@ internal sealed class MatchRosterService : IDisposable
 
     private void Reset()
     {
+        Generation++;
         roster.Clear();
         IsCasualMatch = false;
         dutyId = 0;
@@ -74,6 +76,7 @@ internal sealed class MatchRosterService : IDisposable
             var currentDuty = gameMain == null ? 0u : gameMain->CurrentContentFinderConditionId;
             if (currentDuty != dutyId)
             {
+                Generation++;
                 roster.Clear();
                 dutyId = currentDuty;
             }

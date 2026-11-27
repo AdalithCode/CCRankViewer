@@ -32,11 +32,13 @@ internal sealed class CharacterSearchClient
             : RankingAchievements.Parse(page.Html, characterId, page.Status);
     }
 
-    private async Task<(int Status, string Html, string? Error)> ReadPageAsync(Uri uri, CancellationToken cancellationToken)
+    internal Task<LodestonePage> ReadStandingsPageAsync(Uri uri, CancellationToken token) => ReadPageAsync(uri, token);
+
+    private async Task<LodestonePage> ReadPageAsync(Uri uri, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         if (DateTimeOffset.UtcNow < cooldownUntil)
-            return (0, "", "Lodestone is busy or rate limiting requests. Reload the plugin later to retry.");
+            return new(0, "", "Lodestone is busy or rate limiting requests. Reload the plugin later to retry.");
 
         using var response = await client.GetAsync(uri, cancellationToken).ConfigureAwait(false);
         if (response.StatusCode is HttpStatusCode.TooManyRequests or HttpStatusCode.ServiceUnavailable)
@@ -44,10 +46,13 @@ internal sealed class CharacterSearchClient
             var retry = response.Headers.RetryAfter;
             var wait = retry?.Delta ?? (retry?.Date - DateTimeOffset.UtcNow) ?? TimeSpan.FromMinutes(1);
             cooldownUntil = DateTimeOffset.UtcNow + TimeSpan.FromSeconds(Math.Clamp(wait.TotalSeconds, 60, 300));
-            return ((int)response.StatusCode, "", "Lodestone is busy or rate limiting requests. Reload the plugin later to retry.");
+            return new((int)response.StatusCode, "", "Lodestone is busy or rate limiting requests. Reload the plugin later to retry.");
         }
 
         var html = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-        return ((int)response.StatusCode, html, null);
+        var hasMore = response.Headers.TryGetValues("x-more", out var more) && System.Linq.Enumerable.Contains(more, "true");
+        // The first full page exposes continuation through the loading element.
+        hasMore |= html.Contains("data-next-page=\"2\"", StringComparison.Ordinal);
+        return new((int)response.StatusCode, html, HasMore: hasMore);
     }
 }

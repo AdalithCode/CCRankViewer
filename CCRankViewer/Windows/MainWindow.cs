@@ -29,7 +29,7 @@ internal sealed class MainWindow : Window
         if (plugin.Configuration.ShowExplanatoryText)
         {
             ImGui.Spacing();
-            ImGui.TextWrapped("Best confirmed finish is based on earned CC achievements from Bronze through Ultima. It does not represent current rank.");
+            ImGui.TextWrapped("Achievements show a confirmed season finish. Season standings are a fallback from a published seasonal snapshot. See Source / status for the source; neither is a live rank lookup.");
         }
 
         ImGui.Separator();
@@ -62,8 +62,8 @@ internal sealed class MainWindow : Window
             {
                 ImGui.TableSetupColumn("Player");
                 ImGui.TableSetupColumn("Home world");
-                ImGui.TableSetupColumn("Best confirmed finish");
-                ImGui.TableSetupColumn("Status");
+                ImGui.TableSetupColumn("Rank");
+                ImGui.TableSetupColumn("Source / status");
                 ImGui.TableHeadersRow();
                 foreach (var player in plugin.Roster.Players)
                 {
@@ -77,7 +77,8 @@ internal sealed class MainWindow : Window
                     ImGui.TableNextColumn();
                     var character = plugin.Characters.Get(player);
                     ImGui.TextUnformatted(character.Rank?.RankLabel ?? (character.Status is Lodestone.SearchStatus.Queued
-                        or Lodestone.SearchStatus.Searching or Lodestone.SearchStatus.CheckingAchievements ? "Not loaded" : "Unknown"));
+                        or Lodestone.SearchStatus.Searching or Lodestone.SearchStatus.CheckingAchievements
+                        or Lodestone.SearchStatus.CheckingStandings ? "Not loaded" : "Unknown"));
                     ImGui.TableNextColumn();
                     ImGui.TextUnformatted(character.Label);
                     if (ImGui.IsItemHovered())

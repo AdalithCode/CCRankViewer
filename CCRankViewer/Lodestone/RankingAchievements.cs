@@ -6,14 +6,15 @@ using System.Text.RegularExpressions;
 
 namespace CCRankViewer.Lodestone;
 
-internal enum RankStatus { Confirmed, NoneFound, Restricted, Unavailable }
+internal enum RankStatus { Confirmed, Standings, NoneFound, Restricted, Unavailable }
 
 internal sealed record RankResult(RankStatus Status, string? Tier = null, uint? AchievementId = null, string? Detail = null)
 {
-    internal string RankLabel => Status == RankStatus.Confirmed ? Tier! : Status == RankStatus.NoneFound ? "Unranked" : "Unknown";
+    internal string RankLabel => Status is RankStatus.Confirmed or RankStatus.Standings ? Tier! : Status == RankStatus.NoneFound ? "Unranked" : "Unknown";
     internal string StatusLabel => Status switch
     {
         RankStatus.Confirmed => "Achievement confirmed",
+        RankStatus.Standings => "Season standings",
         RankStatus.NoneFound => "No rank achievement",
         RankStatus.Restricted => "Private / restricted",
         _ => "Achievements unavailable",

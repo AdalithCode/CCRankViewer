@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CCRankViewer.Roster;
 using Dalamud.Plugin.Services;
+using Lumina.Excel.Sheets;
 
 namespace CCRankViewer.Lodestone;
 
@@ -13,6 +14,7 @@ internal sealed class CharacterLookupService : IDisposable
     private readonly IFramework framework;
     private readonly MatchRosterService roster;
     private readonly IPluginLog log;
+    private readonly IDataManager dataManager;
     private readonly HttpClient http = new() { Timeout = TimeSpan.FromSeconds(20), MaxResponseContentBufferSize = 2 * 1024 * 1024 };
     private readonly CancellationTokenSource lifetime = new();
     private readonly ConcurrentQueue<LookupWork> queue = new();
@@ -22,11 +24,12 @@ internal sealed class CharacterLookupService : IDisposable
     private ConcurrentDictionary<(string, uint), CharacterSearchResult> results = new();
     private int generation = -1;
 
-    internal CharacterLookupService(IFramework framework, MatchRosterService roster, IPluginLog log)
+    internal CharacterLookupService(IFramework framework, MatchRosterService roster, IPluginLog log, IDataManager dataManager)
     {
         this.framework = framework;
         this.roster = roster;
         this.log = log;
+        this.dataManager = dataManager;
         http.DefaultRequestHeaders.UserAgent.ParseAdd("CCRankViewer/0.1 (+https://github.com/AdalithCode/CCRankViewer)");
         search = new CharacterSearchClient(http);
         worker = Task.Run(WorkAsync);
@@ -51,12 +54,19 @@ internal sealed class CharacterLookupService : IDisposable
 
         foreach (var player in roster.Players)
             if (results.TryAdd((player.Name, player.HomeWorldId), new(SearchStatus.Queued)))
-                queue.Enqueue(new(player, results, session.Token));
+            {
+                string? group = null;
+                if (dataManager.GetExcelSheet<World>().TryGetRow(player.HomeWorldId, out var world) && world.DataCenter.IsValid)
+                    group = SeasonStandings.RegionGroup(world.DataCenter.Value.Name.ToString());
+                queue.Enqueue(new(player, results, session.Token, generation, group));
+            }
     }
 
     private async Task WorkAsync()
     {
         var token = lifetime.Token;
+        var standingsGeneration = -1;
+        var standings = new StandingsLookup(search.ReadStandingsPageAsync);
         try
         {
             while (!token.IsCancellationRequested)
@@ -68,6 +78,11 @@ internal sealed class CharacterLookupService : IDisposable
                 }
                 if (work.Token.IsCancellationRequested)
                     continue;
+                if (standingsGeneration != work.Generation)
+                {
+                    standings = new StandingsLookup(search.ReadStandingsPageAsync);
+                    standingsGeneration = work.Generation;
+                }
                 var key = (work.Player.Name, work.Player.HomeWorldId);
                 CharacterSearchResult? character = null;
                 try
@@ -79,7 +94,22 @@ internal sealed class CharacterLookupService : IDisposable
                     {
                         work.Results[key] = character with { Status = SearchStatus.CheckingAchievements };
                         await Task.Delay(1000, work.Token).ConfigureAwait(false);
-                        var rank = await search.ReadRankAsync(id, work.Token).ConfigureAwait(false);
+                        RankResult rank;
+                        try
+                        {
+                            rank = await search.ReadRankAsync(id, work.Token).ConfigureAwait(false);
+                        }
+                        catch (Exception exception) when ((exception is HttpRequestException or OperationCanceledException)
+                            && !work.Token.IsCancellationRequested)
+                        {
+                            rank = new(RankStatus.Unavailable, Detail: "Achievement lookup failed or timed out.");
+                        }
+                        if (rank.Status != RankStatus.Confirmed && work.Group != null)
+                        {
+                            work.Results[key] = character with { Status = SearchStatus.CheckingStandings };
+                            rank = await standings.FindAsync(id, work.Player.Name, work.Player.HomeWorld,
+                                work.Group, rank, work.Token).ConfigureAwait(false);
+                        }
                         work.Results[key] = character with { Rank = rank };
                     }
                 }
@@ -114,5 +144,5 @@ internal sealed class CharacterLookupService : IDisposable
     }
 
     private sealed record LookupWork(RosterPlayer Player,
-        ConcurrentDictionary<(string, uint), CharacterSearchResult> Results, CancellationToken Token);
+        ConcurrentDictionary<(string, uint), CharacterSearchResult> Results, CancellationToken Token, int Generation, string? Group);
 }

@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 
 namespace CCRankViewer.Lodestone;
 
-internal enum SearchStatus { Queued, Searching, CheckingAchievements, Found, NotFound, NeedsReview, Unavailable }
+internal enum SearchStatus { Queued, Searching, CheckingAchievements, CheckingStandings, Found, NotFound, NeedsReview, Unavailable }
 
 internal sealed record CharacterSearchResult(SearchStatus Status, ulong? CharacterId = null, string? Detail = null, RankResult? Rank = null)
 {
@@ -15,6 +15,7 @@ internal sealed record CharacterSearchResult(SearchStatus Status, ulong? Charact
         SearchStatus.Queued => "Queued",
         SearchStatus.Searching => "Finding character...",
         SearchStatus.CheckingAchievements => "Checking achievements...",
+        SearchStatus.CheckingStandings => "Checking standings...",
         SearchStatus.Found => "Character found",
         SearchStatus.NotFound => "Not found",
         SearchStatus.NeedsReview => "Match needs review",

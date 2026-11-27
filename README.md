@@ -15,12 +15,21 @@ Dalamud plugin for viewing achievement-confirmed CC season-finish tiers in casua
 - Players temporarily outside object range remain listed until you leave the match.
 - Automatically searches Lodestone for each player's exact character name and home world, once per match.
 - Reads each matched character's public ranking achievements and shows the highest confirmed tier from Bronze through Ultima.
+- If no achievement rank is confirmed, checks the player's home region's public CC standings as a fallback. Matches require the same Lodestone ID, character name, and home world.
 - The Status column shows lookup progress, confirmation, no qualifying achievement, restricted access, or unavailable results. Hover it for evidence and the matched Lodestone ID.
 - Command handlers and UI subscriptions are removed when the plugin unloads.
 
 Rank badges and persistent caching are future work. Confirmed ranks currently display as text.
 
-Lookups send the detected names and home worlds to the public North American Lodestone website over HTTPS, then request the matched character's ranking-achievement page. One background worker makes requests sequentially with a one-second gap; rate-limit responses pause further requests. No login, shared database, or third-party lookup service is used. Results exist only in memory for the current match. Leaving cancels pending work; old responses cannot fill a new match's rows.
+Lookups send the detected names and home worlds to the public North American Lodestone website over HTTPS, then request the matched character's ranking-achievement page. If that does not confirm a tier, the plugin checks published standings for the home world's region. One background worker makes requests sequentially with a one-second gap; rate-limit responses pause further requests. No login, shared database, or third-party lookup service is used. Results exist only in memory for the current match. Leaving cancels pending work; old responses cannot fill a new match's rows.
+
+## Standings fallback
+
+The Rank column can show either an achievement-confirmed season finish or a published seasonal tier. **Source / status** distinguishes Achievement confirmed from Season standings. Hover it for the season and published snapshot. A standings result is not a best season finish or a live rank.
+
+Confirmed achievement ranks remain the first choice. Otherwise, the fallback checks the regional overall ladder (up to six pages), followed by the eight limited tier lists. Pages are reused within the match, including failed requests, and discarded for a new match. The first fallback may take several seconds while these pages download. A published standings match can replace the viewer's no-achievement Unranked label.
+
+The [official standings](https://na.finalfantasyxiv.com/lodestone/ranking/crystallineconflict/) have limited coverage. No matching entry leaves the previous achievement result unchanged. Private achievements remain Unknown when standings do not provide a match; public achievements with no earned tier remain Unranked. Standings failures also preserve the previous result. Home-region mapping currently supports Japan, North America, Europe, and Oceania using the home data center; cross-region standings outside that home region are not searched. Daily snapshots and stale pages can lag the game.
 
 Searches require an exact name and home-world match. Ambiguous or multi-page results are left for review. A blocked, failed, or unexpected response is "Lookup unavailable", never Unranked. Searches are attempted once per character per match; reload the plugin later to retry an error. Persistent caching and a refresh control are future work.
 
@@ -62,6 +71,7 @@ Reload the plugin after building and open `/ccrank` manually (automatic opening 
 7. Watch Status progress from Queued to Finding character to Checking achievements. Compare a confirmed rank against the player's public Ranking achievements; hover Status for the achievement ID and explanation.
 8. Leave while searches are pending, then enter another match. Previous results must not appear beside different players.
 9. Check a character with public achievements but no earned tier achievement: the rank should show Unranked. Restricted achievements and failed lookups should still show Unknown.
+10. For a player on the public standings whose achievements do not confirm a tier, verify Season standings appears beside the rank. Hover for season and snapshot, and compare their ID, world, and tier against the official list. A player absent from those lists must keep their previous achievement outcome.
 
 The implementation reads the installed client structures' battalion field for team membership and the duty sheet's casual CC flag. Live duty identification, team assignments, and player visibility need validation in game; a successful build cannot verify those behaviors.
 

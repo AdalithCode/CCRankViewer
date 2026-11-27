@@ -34,7 +34,7 @@ public sealed class Plugin : IDalamudPlugin
     {
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
         Roster = new MatchRosterService(Framework, ClientState, ObjectTable, DataManager, Log);
-        Characters = new CharacterLookupService(Framework, Roster, Log);
+        Characters = new CharacterLookupService(Framework, Roster, Log, DataManager);
         mainWindow = new MainWindow(this);
         configWindow = new ConfigWindow(this);
         windowSystem.AddWindow(mainWindow);

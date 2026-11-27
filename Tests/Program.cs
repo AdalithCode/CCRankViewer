@@ -39,6 +39,7 @@ Check(roster.Players.All(p => p.Team == MatchTeam.Unknown), "Invalid team sizes 
 
 await CharacterSearchChecks.RunAsync();
 await RankingAchievementChecks.RunAsync();
+await StandingsChecks.RunAsync();
 if (args.Length == 1)
 {
     var result = CCRankViewer.Lodestone.CharacterSearch.Parse(System.IO.File.ReadAllText(args[0]), "Freya Highwind", "Spriggan");
@@ -52,4 +53,14 @@ if (args.Length == 2)
     var restricted = CCRankViewer.Lodestone.RankingAchievements.Parse(System.IO.File.ReadAllText(args[1]), 62713057, 403);
     Check(restricted.Status == CCRankViewer.Lodestone.RankStatus.Restricted,
         "Downloaded Lodestone restriction page recognized");
+}
+if (args.Length == 3)
+{
+    var first = CCRankViewer.Lodestone.SeasonStandings.Parse(System.IO.File.ReadAllText(args[0]), true);
+    Check(first.Entries.Count == 50 && first.Entries[0].CharacterId == 37421725 && first.Entries[0].Tier == "Ultima",
+        "Downloaded official standings full page parses with expected identity and tier");
+    var next = CCRankViewer.Lodestone.SeasonStandings.Parse(System.IO.File.ReadAllText(args[1]), false);
+    Check(next.Entries.Count == 50 && next.Entries[0].Name == "Zeta Salazar", "Downloaded official standings continuation parses");
+    var bronze = CCRankViewer.Lodestone.SeasonStandings.Parse(System.IO.File.ReadAllText(args[2]), true);
+    Check(bronze.Entries.Count == 10 && bronze.Entries[0].Tier == "Bronze", "Downloaded official tier list parses");
 }

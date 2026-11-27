@@ -78,7 +78,7 @@ internal sealed class MainWindow : Window
                     var character = plugin.Characters.Get(player);
                     ImGui.TextUnformatted(character.Rank?.RankLabel ?? (character.Status is Lodestone.SearchStatus.Queued
                         or Lodestone.SearchStatus.Searching or Lodestone.SearchStatus.CheckingAchievements
-                        or Lodestone.SearchStatus.CheckingStandings ? "Not loaded" : "Unknown"));
+                        or Lodestone.SearchStatus.CheckingStandings ? "Not loaded" : "?"));
                     ImGui.TableNextColumn();
                     ImGui.TextUnformatted(character.Label);
                     if (ImGui.IsItemHovered())

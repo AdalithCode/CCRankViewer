@@ -73,7 +73,7 @@ internal static class StandingsChecks
             "Fallback checks limited individual tier lists after the overall ladder");
 
         var absent = new StandingsLookup((uri, token) => Task.FromResult(new LodestonePage(200, Page(Row(999)))), TimeSpan.Zero);
-        Check((await absent.FindAsync(123, "Example Name", "Spriggan", "Chaos", restricted, CancellationToken.None)).RankLabel == "Unknown",
+        Check((await absent.FindAsync(123, "Example Name", "Spriggan", "Chaos", restricted, CancellationToken.None)).RankLabel == "?",
             "Missing standings entry does not turn private achievements into Unranked");
         var unranked = new RankResult(RankStatus.NoneFound);
         Check((await absent.FindAsync(123, "Example Name", "Spriggan", "Chaos", unranked, CancellationToken.None)).RankLabel == "Unranked",

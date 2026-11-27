@@ -10,7 +10,7 @@ internal enum RankStatus { Confirmed, Standings, NoneFound, Restricted, Unavaila
 
 internal sealed record RankResult(RankStatus Status, string? Tier = null, uint? AchievementId = null, string? Detail = null)
 {
-    internal string RankLabel => Status is RankStatus.Confirmed or RankStatus.Standings ? Tier! : Status == RankStatus.NoneFound ? "Unranked" : "Unknown";
+    internal string RankLabel => Status is RankStatus.Confirmed or RankStatus.Standings ? Tier! : Status == RankStatus.NoneFound ? "Unranked" : "?";
     internal string StatusLabel => Status switch
     {
         RankStatus.Confirmed => "Achievement confirmed",

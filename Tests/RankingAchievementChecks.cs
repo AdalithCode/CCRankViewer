@@ -57,7 +57,7 @@ internal static class RankingAchievementChecks
         Check(RankingAchievements.Parse(Page(Entry(3051, true)) + "Page 1 of 2", 123).Status == RankStatus.Unavailable,
             "Incomplete achievement pages cannot establish highest tier");
         Check(RankingAchievements.Parse("<html>Maintenance</html>", 123).Status == RankStatus.Unavailable
-            && RankingAchievements.Parse("<html>Maintenance</html>", 123).RankLabel == "Unknown",
+            && RankingAchievements.Parse("<html>Maintenance</html>", 123).RankLabel == "?",
             "Maintenance page never becomes a rank");
         Check(RankingAchievements.Parse(Page("<div>Changed entry format</div>"), 123).Status == RankStatus.Unavailable,
             "Changed list markup does not become an empty achievement result");
@@ -65,7 +65,7 @@ internal static class RankingAchievementChecks
             "Generic HTTP 403 is not labeled private");
         const string restricted = "<h1 class=\"error__heading\">Access Restricted</h1><p>You do not have permission to view this page.</p>";
         Check(RankingAchievements.Parse(restricted, 123, 403).Status == RankStatus.Restricted
-            && RankingAchievements.Parse(restricted, 123, 403).RankLabel == "Unknown",
+            && RankingAchievements.Parse(restricted, 123, 403).RankLabel == "?",
             "Explicit Lodestone access restriction is reported separately");
 
         using var handler = new RankHandler(Page(Entry(3051, true)));

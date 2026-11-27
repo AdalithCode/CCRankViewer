@@ -61,7 +61,7 @@ Reload the plugin after building and open `/ccrank` manually (automatic opening 
 6. Reload the plugin midmatch and confirm it rebuilds the roster as player objects become available.
 7. Watch Status progress from Queued to Finding character to Checking achievements. Compare a confirmed rank against the player's public Ranking achievements; hover Status for the achievement ID and explanation.
 8. Leave while searches are pending, then enter another match. Previous results must not appear beside different players.
-9. Check restricted achievements, a character without an earned tier achievement, and a failed lookup. These should show Unknown or None confirmed, never Unranked.
+9. Check a character with public achievements but no earned tier achievement: the rank should show Unranked. Restricted achievements and failed lookups should still show Unknown.
 
 The implementation reads the installed client structures' battalion field for team membership and the duty sheet's casual CC flag. Live duty identification, team assignments, and player visibility need validation in game; a successful build cannot verify those behaviors.
 
@@ -71,7 +71,7 @@ Run the dependency-free roster, character-search, and rank-parsing checks (inclu
 dotnet run --project Tests/CCRankViewer.RosterChecks.csproj
 ```
 
-These achievements establish a season-finish milestone, rather than current rank or the highest tier reached during an unfinished season. The mapping is Solid Bronze (#3046), Solid Silver (#3047), Solid Gold (#3048), Solid Platinum (#3049), Solid Diamond (#3050), Solid Crystal (#3051), Omega Material (#3750), and Ultima Material (#3751). Only entries marked earned are used, ordered Bronze < Silver < Gold < Platinum < Diamond < Crystal < Omega < Ultima. A public list with none of these earned displays None confirmed. Explicit access restrictions display Private / restricted; generic failures, blocked pages, changed markup, or incomplete pages display unavailable. None of these outcomes means Unranked.
+These achievements establish a season-finish milestone, rather than current rank or the highest tier reached during an unfinished season. The mapping is Solid Bronze (#3046), Solid Silver (#3047), Solid Gold (#3048), Solid Platinum (#3049), Solid Diamond (#3050), Solid Crystal (#3051), Omega Material (#3750), and Ultima Material (#3751). Only entries marked earned are used, ordered Bronze < Silver < Gold < Platinum < Diamond < Crystal < Omega < Ultima. A successfully read public list with none of these earned displays Unranked. This is the viewer's label for no earned season-finish rank achievement; current in-game rank is not checked. Explicit access restrictions display Private / restricted; generic failures, blocked pages, changed markup, or incomplete pages display unavailable. These restricted or failed lookups keep the rank Unknown.
 
 Omega and Ultima mappings are confirmed by the official Lodestone achievement details: [Omega Material](https://na.finalfantasyxiv.com/lodestone/character/36047772/achievement/detail/3750/) and [Ultima Material](https://na.finalfantasyxiv.com/lodestone/character/28168413/achievement/detail/3751/).
 

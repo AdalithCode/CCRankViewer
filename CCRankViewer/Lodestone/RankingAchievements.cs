@@ -10,7 +10,7 @@ internal enum RankStatus { Confirmed, NoneFound, Restricted, Unavailable }
 
 internal sealed record RankResult(RankStatus Status, string? Tier = null, uint? AchievementId = null, string? Detail = null)
 {
-    internal string RankLabel => Status == RankStatus.Confirmed ? Tier! : Status == RankStatus.NoneFound ? "None confirmed" : "Unknown";
+    internal string RankLabel => Status == RankStatus.Confirmed ? Tier! : Status == RankStatus.NoneFound ? "Unranked" : "Unknown";
     internal string StatusLabel => Status switch
     {
         RankStatus.Confirmed => "Achievement confirmed",
@@ -82,7 +82,7 @@ internal static class RankingAchievements
         }
 
         if (highest == 0)
-            return new(RankStatus.NoneFound, Detail: "Public ranking achievements contain no earned Bronze through Ultima tier achievement. This does not mean Unranked.");
+            return new(RankStatus.NoneFound, Detail: "Public achievements contain no earned Bronze through Ultima season-finish achievement, so this viewer displays Unranked. Current in-game rank is not checked.");
 
         var rank = Tiers[highest];
         return new(RankStatus.Confirmed, rank.Tier, highest,

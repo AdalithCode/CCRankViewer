@@ -45,22 +45,27 @@ internal static class RankingAchievementChecks
             "Listed but unearned rank does not confirm a tier");
         Check(RankingAchievements.Parse(Page(Entry(3934, true)), 123).Status == RankStatus.NoneFound,
             "Other PvP ranking achievements do not confirm a Solid rank");
-        Check(RankingAchievements.Parse(Page(""), 123).Status == RankStatus.NoneFound,
-            "Empty public ranking list means none confirmed, not Unranked");
+        var emptyPublic = RankingAchievements.Parse(Page(""), 123);
+        Check(emptyPublic.Status == RankStatus.NoneFound && emptyPublic.RankLabel == "Unranked",
+            "Public achievements without an earned tier display Unranked");
+        Check(RankingAchievements.Parse(Page(Entry(3051, false)), 123).RankLabel == "Unranked",
+            "Only unearned tier achievements also display Unranked");
         Check(RankingAchievements.Parse(Page(Entry(3051, true, 456)), 123).Status == RankStatus.Unavailable,
             "Achievement for a different character rejected");
         Check(RankingAchievements.Parse(Page(Entry(3051, true)).Replace("data-achieved=\"1\"", "data-achieved=\"0\""), 123).Status == RankStatus.Unavailable,
             "Conflicting earned markers rejected");
         Check(RankingAchievements.Parse(Page(Entry(3051, true)) + "Page 1 of 2", 123).Status == RankStatus.Unavailable,
             "Incomplete achievement pages cannot establish highest tier");
-        Check(RankingAchievements.Parse("<html>Maintenance</html>", 123).Status == RankStatus.Unavailable,
+        Check(RankingAchievements.Parse("<html>Maintenance</html>", 123).Status == RankStatus.Unavailable
+            && RankingAchievements.Parse("<html>Maintenance</html>", 123).RankLabel == "Unknown",
             "Maintenance page never becomes a rank");
         Check(RankingAchievements.Parse(Page("<div>Changed entry format</div>"), 123).Status == RankStatus.Unavailable,
             "Changed list markup does not become an empty achievement result");
         Check(RankingAchievements.Parse(Page(Entry(3051, true)), 123, 403).Status == RankStatus.Unavailable,
             "Generic HTTP 403 is not labeled private");
         const string restricted = "<h1 class=\"error__heading\">Access Restricted</h1><p>You do not have permission to view this page.</p>";
-        Check(RankingAchievements.Parse(restricted, 123, 403).Status == RankStatus.Restricted,
+        Check(RankingAchievements.Parse(restricted, 123, 403).Status == RankStatus.Restricted
+            && RankingAchievements.Parse(restricted, 123, 403).RankLabel == "Unknown",
             "Explicit Lodestone access restriction is reported separately");
 
         using var handler = new RankHandler(Page(Entry(3051, true)));
